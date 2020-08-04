@@ -1,0 +1,7 @@
+*.lock
+.*.swp
+.vagrant*
+.bundle/*
+vendor/*
+roleid
+secretid
