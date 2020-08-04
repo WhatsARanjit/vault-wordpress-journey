@@ -29,6 +29,6 @@ listener "tcp" {
 }
 
 template {
-  source      = "/vagrant/policy/wp-config.php-dynamic.ctmpl"
+  source      = "/vagrant/policy/wp-config.php-static.ctmpl"
   destination = "/var/www/html/wp-config.php"
 }
