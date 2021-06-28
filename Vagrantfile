@@ -28,7 +28,7 @@ Vagrant.configure(2) do |config|
     wp.vm.provision :hosts, :sync_hosts => true
 
     # Install Puppet
-    config.vm.provision 'shell',
+    wp.vm.provision 'shell',
       name: 'install_puppet',
       inline: <<-SHELL
       sudo wget https://yum.puppetlabs.com/RPM-GPG-KEY-puppet
@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
     SHELL
 
     # Install modules and Wordpress
-    config.vm.provision 'shell',
+    wp.vm.provision 'shell',
       name: 'install_wordpress',
       inline: <<-SHELL
       puppet module install puppetlabs/apache --modulepath /opt/puppetlabs/puppet/modules
@@ -48,7 +48,7 @@ Vagrant.configure(2) do |config|
     SHELL
 
     # Install Wordpress with Puppet
-    config.vm.provision 'puppet' do |puppet|
+    wp.vm.provision 'puppet' do |puppet|
       puppet.facter = {
         'mysql_ip'       => wp_ip,
         'vault_mysql_pw' => vault_mysql_pw,
@@ -58,7 +58,7 @@ Vagrant.configure(2) do |config|
     # If AppRole values are available
     if vault_role_id
       # Vault Agent
-      config.vm.provision 'shell',
+      wp.vm.provision 'shell',
         name: 'install_vault_agent',
         inline: <<-"SHELL"
         [[ -f vault ]] || (
@@ -69,7 +69,7 @@ Vagrant.configure(2) do |config|
         )
       SHELL
 
-      config.vm.provision 'shell',
+      wp.vm.provision 'shell',
         name: 'vault_app_role',
         env: {
           "VAULT_ADDR"  => "http://#{vault_ip}:8200",
@@ -102,7 +102,7 @@ Vagrant.configure(2) do |config|
     vault.vm.provision :hosts, :sync_hosts => true
 
     # Install Vault
-    config.vm.provision 'shell',
+    vault.vm.provision 'shell',
       name: 'install_vault',
       inline: <<-"SHELL"
       wget -q -O vault.zip #{vault_url}
