@@ -139,6 +139,7 @@ vault write database/config/wordpress \
 vault write database/roles/wordpress \
   db_name="wordpress" \
   creation_statements="CREATE USER '{{name}}'@'localhost' IDENTIFIED BY '{{password}}'; GRANT SELECT ON *.* TO '{{name}}'@'localhost';" \
+  revocation_statements="REVOKE ALL PRIVILEGES, GRANT OPTION FROM '{{name}}'@'localhost'; DROP USER '{{name}}'@'localhost';" \
   default_ttl="1m" \
   max_ttl="5m"
 ```
