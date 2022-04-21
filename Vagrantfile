@@ -27,32 +27,35 @@ Vagrant.configure(2) do |config|
     wp.vm.network :private_network, :ip => wp_ip, :ipv6 => false
     wp.vm.provision :hosts, :sync_hosts => true
 
-    # Install Puppet
-    wp.vm.provision 'shell',
-      name: 'install_puppet',
-      inline: <<-SHELL
-      sudo wget https://yum.puppetlabs.com/RPM-GPG-KEY-puppet
-      sudo rpm --import RPM-GPG-KEY-puppet
-      sudo yum install -y https://yum.puppet.com/puppet5-release-el-7.noarch.rpm
-      sudo yum install -d 0 -y puppet-agent
-      sudo service firewalld stop
-    SHELL
+    # Only on vagrant up
+    if ARGV[0] == 'up'
+      # Install Puppet
+      wp.vm.provision 'shell',
+        name: 'install_puppet',
+        inline: <<-SHELL
+        sudo wget https://yum.puppetlabs.com/RPM-GPG-KEY-puppet
+        sudo rpm --import RPM-GPG-KEY-puppet
+        sudo yum install -y https://yum.puppet.com/puppet5-release-el-7.noarch.rpm
+        sudo yum install -d 0 -y puppet-agent
+        sudo service firewalld stop
+      SHELL
 
-    # Install modules and Wordpress
-    wp.vm.provision 'shell',
-      name: 'install_wordpress',
-      inline: <<-SHELL
-      puppet module install puppetlabs/apache --modulepath /opt/puppetlabs/puppet/modules
-      puppet module install puppetlabs/mysql --modulepath /opt/puppetlabs/puppet/modules
-      puppet module install hunner/wordpress --modulepath /opt/puppetlabs/puppet/modules
-    SHELL
+      # Install modules and Wordpress
+      wp.vm.provision 'shell',
+        name: 'install_wordpress',
+        inline: <<-SHELL
+        puppet module install puppetlabs/apache --modulepath /opt/puppetlabs/puppet/modules
+        puppet module install puppetlabs/mysql --modulepath /opt/puppetlabs/puppet/modules
+        puppet module install hunner/wordpress --modulepath /opt/puppetlabs/puppet/modules
+      SHELL
 
-    # Install Wordpress with Puppet
-    wp.vm.provision 'puppet' do |puppet|
-      puppet.facter = {
-        'mysql_ip'       => wp_ip,
-        'vault_mysql_pw' => vault_mysql_pw,
-      }
+      # Install Wordpress with Puppet
+      wp.vm.provision 'puppet' do |puppet|
+        puppet.facter = {
+          'mysql_ip'       => wp_ip,
+          'vault_mysql_pw' => vault_mysql_pw,
+        }
+      end
     end
 
     # If AppRole values are available
@@ -70,7 +73,7 @@ Vagrant.configure(2) do |config|
       SHELL
 
       wp.vm.provision 'shell',
-        name: 'vault_app_role',
+        name: 'run_vault_agent',
         env: {
           "VAULT_ADDR"  => "http://#{vault_ip}:8200",
           "VAULT_TOKEN" => ENV['VAULT_TOKEN'],
@@ -82,9 +85,11 @@ Vagrant.configure(2) do |config|
           | grep -m1 secret_id \
           | awk '{print \$2}' > /vagrant/secretid
         mysql -u root mysql -D mysql -e 'ALTER TABLE user MODIFY user CHAR(20);'
+        
+        # Recycle Vault Agent
         sudo pkill vault
         vault agent -config=/vagrant/policy/vault-agent.hcl > ~/vault-agent.log 2>&1 &
-        echo 'AppRole complete...'
+        echo 'Vault Agent running...'
       SHELL
     end
   end
