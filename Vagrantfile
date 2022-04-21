@@ -77,14 +77,12 @@ Vagrant.configure(2) do |config|
         env: {
           "VAULT_ADDR"  => "http://#{vault_ip}:8200",
           "VAULT_TOKEN" => ENV['VAULT_TOKEN'],
-          "MYSQL_ROOT"  => vault_mysql_pw,
         },
         inline: <<-"SHELL"
         echo "Vault address: $VAULT_ADDR"
         vault write -f auth/approle/role/#{vault_role_id}/secret-id \
           | grep -m1 secret_id \
           | awk '{print \$2}' > /vagrant/secretid
-        mysql -u root mysql -D mysql -e 'ALTER TABLE user MODIFY user CHAR(20);'
         
         # Recycle Vault Agent
         sudo pkill vault

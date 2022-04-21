@@ -73,7 +73,6 @@ export VAULT_IP=192.168.50.5
 export VAULT_ADDR=http://${VAULT_IP}:8200
 export VAULT_TOKEN=root
 export VAULT_ROLE_ID=wordpress
-export VAULT_MYSQL_PW=strong_password
 vault read auth/approle/role/$VAULT_ROLE_ID/role-id \
   | grep role_id \
   | awk '{print $2}' > roleid
